@@ -5,7 +5,7 @@ services:
   text-punctuation:
     container_name: text-punctuation-worker
     build: .
-    image: lintoai/linto-platform-text-punctuation-worker:latest-unstable
+    image: lintoai/linto-platform-text-punctuation-worker:latest
     volumes:
       - ${MODEL_PATH}:/home/model-server/model-store/punctuation.mar
       - ${CACHE_PATH}:/home/model-server/.cache/
