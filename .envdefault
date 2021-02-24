@@ -1,2 +1,8 @@
 MODEL_PATH=/path/to/puctuation/model/file
+
+# The following parameter is a directory to save the log files from the server.
 LOGS_PATH=/path/to/puctuation/logs/dir
+
+# The following parameter is a directory to save files from the server.
+# This prevents the server to download every time the main files at start.
+CACHE_PATH=/path/to/save/cache/dir
