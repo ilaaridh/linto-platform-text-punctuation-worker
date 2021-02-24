@@ -12,4 +12,6 @@ services:
     ports:
       - target: 8080
         published: 8888
+      - target: 8081
+        published: 8889
     env_file: .env
