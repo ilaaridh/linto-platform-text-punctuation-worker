@@ -1,0 +1,15 @@
+version: '3.2'
+
+services:
+
+  text-punctuation:
+    container_name: text-punctuation-worker
+    build: .
+    image: lintoai/linto-platform-text-punctuation-worker:latest
+    volumes:
+      - ${MODEL_PATH}:/home/model-server/model-store
+      - ${LOGS_PATH}:/home/model-server/logs
+    ports:
+      - target: 8080
+        published: 8888
+    env_file: .env
