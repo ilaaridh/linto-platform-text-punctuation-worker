@@ -5,9 +5,9 @@ services:
   text-punctuation:
     container_name: text-punctuation-worker
     build: .
-    image: lintoai/linto-platform-text-punctuation-worker:latest
+    image: lintoai/linto-platform-text-punctuation-worker:latest-unstable
     volumes:
-      - ${MODEL_PATH}:/home/model-server/model-store
+      - ${MODEL_PATH}:/home/model-server/model-store/punctuation.mar
       - ${LOGS_PATH}:/home/model-server/logs
     ports:
       - target: 8080

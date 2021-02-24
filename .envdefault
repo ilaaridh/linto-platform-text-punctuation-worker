@@ -1,2 +1,2 @@
-MODEL_PATH=/path/to/puctuation/model/dir
+MODEL_PATH=/path/to/puctuation/model/file
 LOGS_PATH=/path/to/puctuation/logs/dir
