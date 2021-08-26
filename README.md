@@ -53,12 +53,20 @@ wget https://dl.linto.ai/downloads/model-distribution/punctuation_models/fr-FR/b
 
 2- Configure the environment file `.env` included in this repository
 
-
     MODEL_PATH=/path_to_mar_model
     LOGS_PATH=/path_to_logs_folder
     CACHE_PATH=/path_to_cache_folder
 
 NB: When you run the service, some files are loaded in the cache. These files are quite big : around 300Mo. When you stop the container, these files are removed, so you need to create it each time you run the container, and depending on your Internet connexion, it could last some long seconds or minutes. So we decided to store these files permanently in the {CACHE_PATH} : there are loaded one time, and when you kill and restart your container, the service won't download it on the Internet.
+
+3- (Optionnal) Connect to the service broker
+
+You can connect the punctuation service to an exiting service broker such as Redis by filling:
+
+    SERVICES_BROKER=redis://your-broker-address:broker-port
+
+If the broker is available, it will spawn a worker listenning for ```punctuation_task``` on the dedicated queue ```punctuation```.
+
 
 ## Execute
 
@@ -83,4 +91,28 @@ Port 8080 is for inference, port 8081 for models management and 8082 for metrics
 
 ```bash
 curl -X POST localhost:8080/predictions/bert_punc -T <text file>
+```
+
+#### Using redis and celery
+If you have declared a service broker you can call the task:
+
+```python
+def punctuation_task(self, text : Union[str, list], spk_sep: str = None)
+```
+
+Exemple using celery: 
+
+```python
+from celery import Celery
+celery = Celery("celery_client")
+broker_url = "redis://my-broker:6379"
+celery.conf.broker_url = "{}/0".format(broker_url)
+celery.conf.result_backend = "{}/1".format(broker_url)
+taskid = celery.send_task(name="punctuation_task", queue="punctuation", args=["hello i want this text with punctuation"])
+result = taskid.get()
+print(result)
+```
+
+```bash
+>> Hello, I want this text, with punctuation.
 ```

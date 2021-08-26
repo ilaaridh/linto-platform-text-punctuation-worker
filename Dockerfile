@@ -1,61 +1,42 @@
- # NOTE: To build this you will need a docker version > 18.06 with
-#       experimental enabled and DOCKER_BUILDKIT=1
-#
-#       If you do not use buildkit you are not going to have a good time
-#
-#       For reference: 
-#           https://docs.docker.com/develop/develop-images/build_enhancements/
-
-
-ARG BASE_IMAGE=ubuntu:18.04
-
-FROM ${BASE_IMAGE} AS compile-image
-ARG BASE_IMAGE=ubuntu:18.04
+FROM python:3.8
+LABEL maintainer="stanfous@linagora.com, rbaraglia@linagora.com"
 ENV PYTHONUNBUFFERED TRUE
 
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
     ca-certificates \
     g++ \
-    python3-dev \
-    python3-distutils \
-    python3-venv \
     openjdk-11-jre-headless \
     curl \
-    wget \
-    && rm -rf /var/lib/apt/lists/* \
-    && cd /tmp \
-    && curl -O https://bootstrap.pypa.io/get-pip.py \
-    && python3 get-pip.py \
-    && rm get-pip.py
+    wget
 
-RUN python3 -m venv /home/venv
+# Rust compiler for tokenizers
+RUN curl https://sh.rustup.rs -sSf | bash -s -- -y
+ENV PATH="/root/.cargo/bin:${PATH}"
 
-ENV PATH="/home/venv/bin:$PATH"
+WORKDIR /usr/src/app
 
-RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 1 \
-    && update-alternatives --install /usr/local/bin/pip pip /usr/local/bin/pip3 1
+# Python dependencies
+COPY requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
 
-RUN pip install -U pip setuptools
-RUN pip install --no-cache-dir captum torch torchvision torchserve torchtext torch-model-archiver sklearn pandas numpy transformers==3.0.2
+COPY docker-entrypoint.sh wait-for-it.sh ./
 
-RUN useradd -m model-server \
-    && mkdir -p /home/model-server/tmp
+# Supervisor
+COPY supervisor /usr/src/app/supervisor
+RUN mkdir -p /var/log/supervisor/
 
-#COPY --chown=model-server --from=compile-image /home/venv /home/venv
+COPY punctuationworker /usr/src/app/punctuationworker
+ENV PYTHONPATH="${PYTHONPATH}:/usr/src/app/punctuationworker"
 
-COPY dockerd-entrypoint.sh /usr/local/bin/dockerd-entrypoint.sh
+COPY config.properties /usr/src/app/config.properties
+RUN mkdir /usr/src/app/model-store
+RUN mkdir -p /usr/src/app/tmp
 
-RUN chmod +x /usr/local/bin/dockerd-entrypoint.sh \
-    && chown -R model-server /home/model-server
-
-COPY config.properties /home/model-server/config.properties
-RUN mkdir /home/model-server/model-store && chown -R model-server /home/model-server/model-store
+HEALTHCHECK CMD curl http://localhost:8080/ping 
 
 EXPOSE 8080 8081 8082 7070 7071
 
-USER model-server
-WORKDIR /home/model-server
-ENV TEMP=/home/model-server/tmp
-ENTRYPOINT ["/usr/local/bin/dockerd-entrypoint.sh"]
+ENV TEMP=/usr/src/app/tmp
+ENTRYPOINT ["./docker-entrypoint.sh"]
 CMD ["serve"]

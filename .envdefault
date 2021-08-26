@@ -1,4 +1,4 @@
-MODEL_PATH=/path/to/puctuation/model/file
+MODEL_PATH=/path/to/punctuation/model/file
 
 # The following parameter is a directory to save the log files from the server.
 LOGS_PATH=/path/to/dir/where/to/save/logs/files
@@ -6,3 +6,7 @@ LOGS_PATH=/path/to/dir/where/to/save/logs/files
 # The following parameter is a directory to save files from the server.
 # This prevents the server to download every time the main files at start.
 CACHE_PATH=/path/to/dir/where/to/save/cache/files
+
+# Microservice integration (optionnal)
+SERVICES_BROKER=redis://your.broker:broker-port
+CONCURRENCY=number-of-concurrent-requests
